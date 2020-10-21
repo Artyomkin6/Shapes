@@ -6,6 +6,8 @@ import data.Shape;
 import exceptions.BackpackOverfullingException;
 import functions.Functions;
 
+import javax.swing.*;
+
 public class Backpack {
 
     private double size = 0;
@@ -16,7 +18,7 @@ public class Backpack {
         this(100);
     }
 
-    public Backpack(int initialCapacity) {
+    public Backpack(double initialCapacity) {
         capacity = initialCapacity;
         shapes = new ArrayList<>();
     }
@@ -43,7 +45,24 @@ public class Backpack {
         size = 0;
     }
 
+    public boolean isEmpty() {
+        return shapes.isEmpty();
+    }
 
+    double getCapacity() {
+        return capacity;
+    }
+
+    List<Shape> getShapeList() {
+        return shapes;
+    }
+
+    public void renewViewShapeList(DefaultListModel<Shape> list) {
+        list.clear();
+        for (Shape shape : shapes) {
+            list.addElement(shape);
+        }
+    }
 
     @Override
     public String toString() {

@@ -12,6 +12,10 @@ public class Ball implements Shape {
         radius = r;
     }
 
+    public double getRadius() {
+        return radius;
+    }
+
     public double volume() {
         return 4 * Math.PI * radius * radius * radius / 3;
     }

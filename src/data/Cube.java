@@ -12,6 +12,10 @@ public class Cube implements Shape {
         length = l;
     }
 
+    public double getLength() {
+        return length;
+    }
+
     public double volume() {
         return length * length * length;
     }

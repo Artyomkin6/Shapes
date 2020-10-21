@@ -19,6 +19,14 @@ public class Cylinder implements Shape {
         height = h;
     }
 
+    public double getRadius() {
+        return radius;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
     public double volume() {
         return Math.PI * radius * radius * height;
     }

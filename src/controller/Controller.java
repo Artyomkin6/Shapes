@@ -1,14 +1,20 @@
 package controller;
 
+import bag.XmlHandler;
 import data.*;
 import bag.Backpack;
 import data.Shape;
 import exceptions.BackpackOverfullingException;
+import exceptions.FileCancellingException;
+import org.xml.sax.SAXException;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.parsers.ParserConfigurationException;
 
 public class Controller extends JFrame {
 
@@ -32,6 +38,8 @@ public class Controller extends JFrame {
         initialization();
 
         placeElements();
+
+        createMenu();
 
         buttonAddCube.addActionListener(new ActionListener() {
             @Override
@@ -218,6 +226,132 @@ public class Controller extends JFrame {
         listPanel.add(scrollMessage);
     }
 
+    private void createMenu() {
+        JMenuBar menuBar = new JMenuBar();
+
+        menuBar.add(createFileMenu());
+        menuBar.add(createOptionsMenu());
+
+        setJMenuBar(menuBar);
+    }
+
+    private JMenu createFileMenu() {
+        JMenu file = new JMenu("File");
+
+        JMenuItem open = new JMenuItem("Open");
+        JMenuItem save = new JMenuItem("Save");
+
+        file.add(open);
+        file.add(save);
+
+        open.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    File file = fileDialoge(FileChoosingType.OPENING);
+
+                    try {
+                        if (XmlHandler.xmlValidator(file)) {
+                            bag = XmlHandler.xmlReader(file);
+                        } else {
+                            showNonValidFileMessage();
+                            return;
+                        }
+                    } catch (ParserConfigurationException parserE) {
+                        System.out.println("parser error");
+                    } catch (SAXException sExc) {
+                        System.out.println("sax error");
+                    } catch (IOException ioExc) {
+                        System.out.println("io error");
+                    }
+
+                    bag.renewViewShapeList(defaultListModel);
+
+                } catch (FileCancellingException exc) {
+                    System.out.println("cancelled");
+                }
+            }
+        });
+
+        save.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                if (bag.isEmpty()) {
+                    showEmptyBackpackMessage();
+                    return;
+                }
+                try {
+                    File file = fileDialoge(FileChoosingType.SAVING);
+                    if (!file.getPath().substring(file.getPath().length() - 4).equals(".xml")) {
+                        file = new File(file.getPath() + ".xml");
+                    }
+                    try {
+                        file.createNewFile();
+                    } catch (IOException ioExc) {
+                        showFileErrorMessage();
+                    }
+                    XmlHandler.xmlWriter(bag, file);
+                } catch (FileCancellingException exc) {
+                    System.out.println("cancelled");
+                }
+            }
+        });
+
+        return file;
+    }
+
+    private JMenu createOptionsMenu() {
+        JMenu options = new JMenu("Options");
+
+        JMenuItem aboutAuthor = new JMenuItem("About");
+
+        aboutAuthor.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showAboutMessage();
+            }
+        });
+
+        options.add(aboutAuthor);
+
+        return options;
+    }
+
+    private void showAboutMessage() {
+        String msg = "Author: Artyom Rogozhnikov\n" +
+                "The author wishes you good day :)";
+        JOptionPane.showMessageDialog(
+                Controller.this,
+                msg,
+                "About",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    private File fileDialoge(FileChoosingType type) {
+        JFileChooser fileChooser = new JFileChooser(System.getProperty("user.dir"));
+
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "XML Files", "xml");
+        fileChooser.setFileFilter(filter);
+
+        int result = JFileChooser.CANCEL_OPTION;
+
+        if (type == FileChoosingType.OPENING) {
+            result = fileChooser.showOpenDialog(Controller.this);
+        } else if (type == FileChoosingType.SAVING) {
+            result = fileChooser.showSaveDialog(Controller.this);
+        }
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        } else {
+            throw new FileCancellingException();
+        }
+    }
+
     private void showWrongNumberMessage() {
         JOptionPane.showMessageDialog(
                 Controller.this,
@@ -231,6 +365,33 @@ public class Controller extends JFrame {
         JOptionPane.showMessageDialog(
                 Controller.this,
                 "Backpack is full",
+                "Error",
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    private void showFileErrorMessage() {
+        JOptionPane.showMessageDialog(
+                Controller.this,
+                "File error",
+                "Cannot create file",
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    private void showNonValidFileMessage() {
+        JOptionPane.showMessageDialog(
+                Controller.this,
+                "File is not valid",
+                "File error",
+                JOptionPane.WARNING_MESSAGE
+        );
+    }
+
+    private void showEmptyBackpackMessage() {
+        JOptionPane.showMessageDialog(
+                Controller.this,
+                "The bag is empty",
                 "Error",
                 JOptionPane.WARNING_MESSAGE
         );
